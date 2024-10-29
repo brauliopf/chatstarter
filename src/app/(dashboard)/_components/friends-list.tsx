@@ -1,3 +1,5 @@
+"use client";
+
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -37,7 +39,7 @@ export function PendingFriendsList() {
             <IconButton
               icon={<CheckIcon />}
               className="bg-green-100"
-              tooltip="Accept Request"
+              title="Accept Request"
               onClick={() => {
                 // accept the friend request
                 updateStatus({ id: friend._id, status: "accepted" });
@@ -46,7 +48,7 @@ export function PendingFriendsList() {
             <IconButton
               icon={<XIcon />}
               className="bg-red-100"
-              tooltip="Reject Request"
+              title="Reject Request"
               onClick={() => {
                 // reject the friend request
                 updateStatus({ id: friend._id, status: "rejected" });
@@ -80,7 +82,7 @@ export function AcceptedFriendsList() {
             <IconButton
               icon={<MessageCircleIcon />}
               className="bg-blue-100"
-              tooltip="Start DM"
+              title="Start DM"
               onClick={() => {
                 // start a dm with the friend
               }}
@@ -88,7 +90,7 @@ export function AcceptedFriendsList() {
             <IconButton
               icon={<XIcon />}
               className="bg-red-100"
-              tooltip="Remove Friend"
+              title="Remove Friend"
               onClick={() => {
                 // remove the friend (mark as rejected)
                 updateStatus({ id: friend._id, status: "rejected" });
@@ -112,12 +114,12 @@ function FriendsListEmpty({ children }: { children: React.ReactNode }) {
 function IconButton({
   icon,
   className,
-  tooltip,
+  title: tooltip,
   onClick,
 }: {
   icon: React.ReactNode;
   className: string;
-  tooltip: string;
+  title: string;
   onClick: () => void;
 }) {
   return (

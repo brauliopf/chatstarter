@@ -1,3 +1,5 @@
+"use client";
+
 import { api } from "@/convex/_generated/api";
 import {
   Dialog,
@@ -20,10 +22,10 @@ export function AddFriend() {
   const createFriendRequest = useMutation(
     api.functions.friends.createFriendRequest
   );
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      createFriendRequest({ username: e.currentTarget.username.value });
+      await createFriendRequest({ username: e.currentTarget.username.value });
       toast.success("Friend request sent");
       setOpen(false);
     } catch (error) {

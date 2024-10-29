@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogContent,
@@ -13,11 +15,33 @@ import { SidebarGroupAction } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export const NewDM = () => {
+  const [open, setOpen] = useState(false);
+  const createDirectMessage = useMutation(api.functions.dms.create);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const id = await createDirectMessage({
+        username: e.currentTarget.username.value,
+      });
+      setOpen(false);
+      router.push(`/dms/${id}`);
+    } catch (error) {
+      toast.error("Failed to create DM", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <SidebarGroupAction>
           <PlusIcon />
@@ -31,7 +55,7 @@ export const NewDM = () => {
             Enter a username to start a direct message.
           </DialogDescription>
         </DialogHeader>
-        <form className="contents">
+        <form className="contents" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1">
             <Label htmlFor="username">Username</Label>
             <Input id="username" type="text" />
