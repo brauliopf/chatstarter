@@ -50,6 +50,22 @@ export default function MessagePage({
   );
 }
 
+function TypingIndicator({
+  directMessage,
+}: {
+  directMessage: Id<"directMessages">;
+}) {
+  const usernames = useQuery(api.functions.typing.list, { directMessage });
+
+  if (!usernames || usernames.length === 0) return null;
+
+  return (
+    <div className="text-sm text-muted-foreground px-4 py-2">
+      {usernames.join(", ")} is typing...
+    </div>
+  );
+}
+
 type Message = FunctionReturnType<typeof api.functions.message.list>[number];
 
 // Doc<"messages"> represents a message
@@ -101,6 +117,7 @@ function MessageInput({
 }) {
   const [content, setContent] = useState("");
   const sendMessage = useMutation(api.functions.message.create);
+  const sendTypingIndicator = useMutation(api.functions.typing.upsert);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -113,16 +130,24 @@ function MessageInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center p-4 gap-2">
-      <Input
-        placeholder="Message"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-      <Button size="icon">
-        <SendIcon />
-        <span className="sr-only">Send</span>
-      </Button>
-    </form>
+    <>
+      <TypingIndicator directMessage={directMessage} />
+      <form onSubmit={handleSubmit} className="flex items-center p-4 gap-2">
+        <Input
+          placeholder="Message"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onKeyDown={(e) => {
+            if (content.length > 0) {
+              sendTypingIndicator({ directMessage });
+            }
+          }}
+        />
+        <Button size="icon">
+          <SendIcon />
+          <span className="sr-only">Send</span>
+        </Button>
+      </form>
+    </>
   );
 }

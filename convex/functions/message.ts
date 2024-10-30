@@ -4,6 +4,7 @@ import { ConvexError, v } from "convex/values";
 import { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./helpers";
+import { internal } from "../_generated/api";
 
 // return all messages
 // query is a function that fetches data
@@ -53,6 +54,10 @@ export const create = authenticatedMutation({
       sender: ctx.user._id,
       content: content,
       directMessage: directMessage,
+    });
+    await ctx.scheduler.runAfter(0, internal.functions.typing.remove, {
+      directMessage,
+      user: ctx.user._id,
     });
   },
 });
