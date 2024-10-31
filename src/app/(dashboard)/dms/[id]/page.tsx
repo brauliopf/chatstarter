@@ -14,9 +14,18 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { FunctionReturnType } from "convex/server";
-import { MoreVerticalIcon, SendIcon, TrashIcon } from "lucide-react";
-import { use, useState } from "react";
+import {
+  PlusIcon,
+  MoreVerticalIcon,
+  ReceiptRussianRuble,
+  SendIcon,
+  TrashIcon,
+  LoaderIcon,
+} from "lucide-react";
+import { use, useRef, useState } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
+
 export default function MessagePage({
   params,
 }: {
@@ -81,6 +90,15 @@ function MessageItem({ message }: { message: Message }) {
           {message.sender?.username ?? "Deleted User "}
         </p>
         <p className="text-sm ">{message.content} </p>
+        {message.attachment && (
+          <Image
+            src={message.attachment}
+            alt="Attachment"
+            width={300}
+            height={300}
+            className="rounded border overflow-hidden"
+          />
+        )}
       </div>
       <MessageActions message={message} />
     </div>
@@ -119,11 +137,37 @@ function MessageInput({
   const sendMessage = useMutation(api.functions.message.create);
   const sendTypingIndicator = useMutation(api.functions.typing.upsert);
 
+  const generateUploadUrl = useMutation(
+    api.functions.message.generateUploadUrl
+  );
+  // create a variable with type Id<"_storage"> and default value undefined -- end with "()"
+  const [attachment, setAttachment] = useState<Id<"_storage">>();
+  const [file, setFile] = useState<File>();
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFile(file);
+    setIsUploading(true);
+    const url = await generateUploadUrl();
+    const res = await fetch(url, {
+      method: "POST",
+      body: file,
+    });
+    const { storageId } = (await res.json()) as { storageId: Id<"_storage"> };
+    setAttachment(storageId);
+    setIsUploading(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await sendMessage({ directMessage, content });
+      await sendMessage({ directMessage, attachment, content });
       setContent("");
+      setAttachment(undefined);
+      setFile(undefined);
     } catch (error) {
       toast.error("Failed to send message");
     }
@@ -132,22 +176,66 @@ function MessageInput({
   return (
     <>
       <TypingIndicator directMessage={directMessage} />
-      <form onSubmit={handleSubmit} className="flex items-center p-4 gap-2">
-        <Input
-          placeholder="Message"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={(e) => {
-            if (content.length > 0) {
-              sendTypingIndicator({ directMessage });
-            }
+      <form onSubmit={handleSubmit} className="flex items-end p-4 gap-2">
+        <Button
+          type="button" // not a "submit" button
+          size="icon"
+          onClick={() => {
+            fileInputRef.current?.click();
           }}
-        />
+        >
+          <PlusIcon />
+          <span className="sr-only">Attach</span>
+        </Button>
+        <div className="flew flex-col flex-1 gap-2">
+          {file && <ImagePreview file={file} isUploading={isUploading} />}
+          <Input
+            placeholder="Message"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onKeyDown={(e) => {
+              if (content.length > 0) {
+                sendTypingIndicator({ directMessage });
+              }
+            }}
+          />
+        </div>
         <Button size="icon">
           <SendIcon />
           <span className="sr-only">Send</span>
         </Button>
       </form>
+      <input
+        type="file"
+        className="hidden"
+        ref={fileInputRef}
+        // either a function name or a lambda function
+        onChange={handleImageUpload}
+      />
     </>
+  );
+}
+
+function ImagePreview({
+  file,
+  isUploading,
+}: {
+  file: File;
+  isUploading: boolean;
+}) {
+  return (
+    <div className="relative size-40 rounded border overflow-hidden">
+      <Image
+        src={URL.createObjectURL(file)}
+        alt="Attachment"
+        width={300}
+        height={300}
+      />
+      {isUploading && (
+        <div className="absoute inset-0 flex items-center justify-center bg-background/50">
+          <LoaderIcon className="animate-spin size-8" />
+        </div>
+      )}
+    </div>
   );
 }
