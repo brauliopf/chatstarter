@@ -15,16 +15,15 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { FunctionReturnType } from "convex/server";
 import {
-  PlusIcon,
+  LoaderIcon,
   MoreVerticalIcon,
-  ReceiptRussianRuble,
+  PlusIcon,
   SendIcon,
   TrashIcon,
-  LoaderIcon,
 } from "lucide-react";
-import { use, useRef, useState } from "react";
-import { toast } from "sonner";
 import Image from "next/image";
+import { use, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function MessagePage({
   params,
@@ -33,8 +32,33 @@ export default function MessagePage({
 }) {
   const { id } = use(params);
 
+  const user = useQuery(api.functions.user.get);
   const directMessage = useQuery(api.functions.dms.get, { id });
-  const messages = useQuery(api.functions.message.list, { directMessage: id });
+  const messages: Message[] =
+    useQuery(api.functions.message.list, { directMessage: id }) || [];
+
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // check if sender is current user
+    const isSender =
+      messages.length > 0
+        ? messages[messages.length - 1].sender?._id === user!._id
+        : false;
+
+    // get dynamically created scroll area
+    const scrollArea = document.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    );
+
+    // scroll to bottom if sender is current user
+    if (isSender && scrollArea) {
+      scrollArea.scrollTo({
+        top: scrollArea.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages]);
 
   if (!directMessage) {
     return null;
@@ -49,7 +73,7 @@ export default function MessagePage({
         </Avatar>
         <h1 className="font-semibold">{directMessage.user.username}</h1>
       </header>
-      <ScrollArea className="h-full py-4">
+      <ScrollArea ref={scrollAreaRef} className="h-full py-4" id="scroll-area">
         {messages?.map((message) => (
           <MessageItem key={message._id} message={message} />
         ))}
@@ -139,6 +163,7 @@ function MessageActions({ message }: { message: Message }) {
     </DropdownMenu>
   );
 }
+
 function MessageInput({
   directMessage,
 }: {
