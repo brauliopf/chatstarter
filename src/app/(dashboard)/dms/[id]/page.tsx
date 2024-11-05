@@ -37,8 +37,6 @@ export default function MessagePage({
   const messages: Message[] =
     useQuery(api.functions.message.list, { directMessage: id }) || [];
 
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     // check if sender is current user
     const isSender =
@@ -73,7 +71,7 @@ export default function MessagePage({
         </Avatar>
         <h1 className="font-semibold">{directMessage.user.username}</h1>
       </header>
-      <ScrollArea ref={scrollAreaRef} className="h-full py-4" id="scroll-area">
+      <ScrollArea className="h-full py-4" id="scroll-area">
         {messages?.map((message) => (
           <MessageItem key={message._id} message={message} />
         ))}
