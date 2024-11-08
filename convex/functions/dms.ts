@@ -3,6 +3,10 @@ import { authenticatedMutation, authenticatedQuery } from "./helpers";
 import { QueryCtx } from "../_generated/server";
 import { Doc, Id } from "../_generated/dataModel";
 
+/**
+ * get all dms for the current user
+ * returns an array of dm objects
+ */
 export const list = authenticatedQuery({
   handler: async (ctx) => {
     const directMessages = await ctx.db
@@ -15,13 +19,15 @@ export const list = authenticatedQuery({
   },
 });
 
+/**
+ * verify that the user is a member of the dm
+ * get dm by id, having user as current user (ctx.user._id)
+ */
 export const get = authenticatedQuery({
   args: {
     id: v.id("directMessages"),
   },
   handler: async (ctx, { id }) => {
-    // verify that the user is a member of the dm
-    // get dm by id, having user as current user (ctx.user._id)
     const members = await ctx.db
       .query("directMessageMembers")
       .withIndex("by_direct_message_user", (q) =>
@@ -36,6 +42,10 @@ export const get = authenticatedQuery({
   },
 });
 
+/**
+ * create a new dm with the current user and the user with the given username
+ * returns the id of the new dm
+ */
 export const create = authenticatedMutation({
   args: {
     username: v.string(),
@@ -78,12 +88,15 @@ export const create = authenticatedMutation({
   },
 });
 
+/**
+ * @param ctx: (& === intersection) QueryCtx & { user: Doc<"users"> }
+ * @param id: Id<"directMessages">
+ * @returns spread dm and user object
+ */
 const getDirectMessage = async (
   ctx: QueryCtx & { user: Doc<"users"> },
   id: Id<"directMessages">
 ) => {
-  // gets the dm and the other member of the dm
-
   // get dm object
   const dm = await ctx.db.get(id);
   if (!dm) throw new Error("Direct message not found");

@@ -29,9 +29,13 @@ export function AddFriend() {
       toast.success("Friend request sent");
       setOpen(false);
     } catch (error) {
-      toast.error("Failed to send friend request", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
+      if (error instanceof Error && error.message.includes("not found")) {
+        toast.error("User not found. Please check the username.");
+      } else {
+        toast.error("Failed to send friend request", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
     }
   };
 

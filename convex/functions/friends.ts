@@ -3,9 +3,15 @@ import { Id } from "../_generated/dataModel";
 import { QueryCtx } from "../_generated/server";
 import { authenticatedMutation, authenticatedQuery } from "./helpers";
 
+/*
+ * listPending: all rows with target as current user and status pending
+ * Params:
+ ** ctx: QueryCtx
+ * Returns:
+ ** An array of objects composed of a friends request and a user object
+ */
 export const listPending = authenticatedQuery({
   handler: async (ctx) => {
-    // friends: (~connections) all rows with target as current user and status pending
     const friends = await ctx.db
       .query("friends")
       .withIndex("by_target_status", (q) =>
@@ -13,13 +19,28 @@ export const listPending = authenticatedQuery({
       )
       .collect();
     // get the sender of the friends
-    return await getPartyOfInterest(ctx, friends, "sender");
+    return await getUserDetails(ctx, friends, "sender");
   },
 });
 
+export const listPendingOutgoing = authenticatedQuery({
+  handler: async (ctx) => {
+    // friends: (~connections) all rows current user as sender and pending status
+    const friendRequestOutgoing = await ctx.db
+      .query("friends")
+      .withIndex("by_sender_status", (q) =>
+        q.eq("sender", ctx.user._id).eq("status", "pending")
+      )
+      .collect();
+    // get the sender of the friends
+    return await getUserDetails(ctx, friendRequestOutgoing, "target");
+  },
+});
+
+/**
+ * list all friends (requests) with status accepted
+ */
 export const listAccepted = authenticatedQuery({
-  // friends1: rows with sender as current user and status accepted
-  // friends2: rows with target as current user and status accepted
   handler: async (ctx) => {
     const friends1 = await ctx.db
       .query("friends")
@@ -34,9 +55,9 @@ export const listAccepted = authenticatedQuery({
       )
       .collect();
     // get the target of the friends that current user is the sender
-    const friendsWithUser1 = await getPartyOfInterest(ctx, friends1, "target");
+    const friendsWithUser1 = await getUserDetails(ctx, friends1, "target");
     // get the sender of the friends that current user is the target
-    const friendsWithUser2 = await getPartyOfInterest(ctx, friends2, "sender");
+    const friendsWithUser2 = await getUserDetails(ctx, friends2, "sender");
     return [...friendsWithUser1, ...friendsWithUser2];
   },
 });
@@ -82,21 +103,31 @@ export const updateStatus = authenticatedMutation({
   },
 });
 
-// use a generic function to map over the friends and get the user object
-// SYNTAX: function name = <generic parameters>(parameter list) => {handler}
-const getPartyOfInterest = async <
+/**
+ * use a generic function to map over the friends and get the user object
+ * SYNTAX: function name = <generic parameters>(parameter list) => {handler}
+ * Function call: getPartyOfInterest(ctx, friends, "sender");
+ *
+ * Args:
+ ** ctx: QueryCtx
+ ** items: array of friends requests with a user Id in a property called {role}
+ ** key: "sender" | "target"
+ * Returns:
+ ** A spread of friends request with a user object in a property called user
+ */
+const getUserDetails = async <
   role extends "sender" | "target",
   T extends { [key in role]: Id<"users"> },
 >(
   ctx: QueryCtx,
-  items: T[],
-  key: role
+  requests: T[],
+  role: role
 ) => {
   const result = await Promise.allSettled(
-    items.map(async (item) => {
-      const user = await ctx.db.get(item[key]);
+    requests.map(async (request) => {
+      const user = await ctx.db.get(request[role]);
       if (!user) throw new Error("User not found");
-      return { ...item, user };
+      return { ...request, user };
     })
   );
   return result.filter((r) => r.status === "fulfilled").map((r) => r.value);

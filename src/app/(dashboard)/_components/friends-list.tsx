@@ -1,25 +1,21 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  CheckCheck,
-  CheckCheckIcon,
-  CheckIcon,
-  MessageCircleIcon,
-  XIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { api } from "@/convex/_generated/api";
+import { cn } from "@/lib/utils";
+import { useMutation, useQuery } from "convex/react";
+import { CheckIcon, MessageCircleIcon, XIcon } from "lucide-react";
+import Link from "next/link";
 
 export function PendingFriendsList() {
   const friends = useQuery(api.functions.friends.listPending);
+  const friendsOutgoing = useQuery(api.functions.friends.listPendingOutgoing);
   const updateStatus = useMutation(api.functions.friends.updateStatus);
 
   return (
@@ -27,35 +23,54 @@ export function PendingFriendsList() {
       <h2 className="text-xs font-weight-medium text-muted-foreground p-2.5 ">
         Pending Friends
       </h2>
-      {friends?.length === 0 ? (
+      {friends?.length === 0 && friendsOutgoing?.length === 0 ? (
         <FriendsListEmpty>No pending friends</FriendsListEmpty>
       ) : (
-        friends?.map((friend, index) => (
-          <FriendItem
-            key={index}
-            username={friend.user.username}
-            image={friend.user.image}
-          >
-            <IconButton
-              icon={<CheckIcon />}
-              className="bg-green-100"
-              title="Accept Request"
-              onClick={() => {
-                // accept the friend request
-                updateStatus({ id: friend._id, status: "accepted" });
-              }}
-            />
-            <IconButton
-              icon={<XIcon />}
-              className="bg-red-100"
-              title="Reject Request"
-              onClick={() => {
-                // reject the friend request
-                updateStatus({ id: friend._id, status: "rejected" });
-              }}
-            />
-          </FriendItem>
-        ))
+        <>
+          {friends?.map((friend, index) => (
+            <FriendItem
+              key={index}
+              username={friend.user.username}
+              image={friend.user.image}
+            >
+              <IconButton
+                icon={<CheckIcon />}
+                className="bg-green-100"
+                title="Accept Request"
+                onClick={() => {
+                  // accept the friend request
+                  updateStatus({ id: friend._id, status: "accepted" });
+                }}
+              />
+              <IconButton
+                icon={<XIcon />}
+                className="bg-red-100"
+                title="Reject Request"
+                onClick={() => {
+                  // reject the friend request
+                  updateStatus({ id: friend._id, status: "rejected" });
+                }}
+              />
+            </FriendItem>
+          ))}
+          {friendsOutgoing?.map((friend, index) => (
+            <FriendItem
+              key={index}
+              username={friend.user.username}
+              image={friend.user.image}
+            >
+              <IconButton
+                icon={<XIcon />}
+                className="bg-red-100"
+                title="Remove Request"
+                onClick={() => {
+                  // reject the friend request
+                  updateStatus({ id: friend._id, status: "rejected" });
+                }}
+              />
+            </FriendItem>
+          ))}
+        </>
       )}
     </div>
   );
@@ -64,6 +79,13 @@ export function PendingFriendsList() {
 export function AcceptedFriendsList() {
   const friends = useQuery(api.functions.friends.listAccepted);
   const updateStatus = useMutation(api.functions.friends.updateStatus);
+  const getDirectMessages = useQuery(api.functions.dms.list);
+  const dict: { [key: string]: string } = {};
+  if (getDirectMessages) {
+    getDirectMessages.map((dm) => {
+      dict[dm.user._id] = dm._id;
+    });
+  }
 
   return (
     <div className="flex flex-col divide-y">
@@ -79,14 +101,14 @@ export function AcceptedFriendsList() {
             username={friend.user.username}
             image={friend.user.image}
           >
-            <IconButton
-              icon={<MessageCircleIcon />}
-              className="bg-blue-100"
-              title="Start DM"
-              onClick={() => {
-                // start a dm with the friend
-              }}
-            />
+            <Link href={`/dms/${dict[friend.user._id]}`}>
+              <IconButton
+                icon={<MessageCircleIcon />}
+                className="bg-blue-100"
+                title="Start DM"
+                onClick={() => {}}
+              />
+            </Link>
             <IconButton
               icon={<XIcon />}
               className="bg-red-100"
