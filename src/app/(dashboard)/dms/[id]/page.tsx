@@ -57,7 +57,7 @@ export default function MessagePage({
         behavior: "smooth",
       });
     }
-  }, [messages]);
+  }, [messages, user]);
 
   if (!directMessage) {
     return null;
@@ -205,7 +205,10 @@ function MessageInput({
       setAttachment(undefined);
       setFile(undefined);
     } catch (error) {
-      toast.error("Failed to send message", { description: error.message });
+      // Type assertion to handle unknown error type
+      const errorMessage =
+        (error as Error).message || "An unknown error occurred.";
+      toast.error("Failed to send message", { description: errorMessage });
     }
   };
 
