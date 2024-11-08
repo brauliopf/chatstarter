@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm run-p convex dev next dev",
+    "dev": "pnpm run-p dev:*",
     "dev:convex": "convex dev",
     "dev:next": "next dev",
     "build": "next build",
