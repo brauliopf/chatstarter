@@ -243,7 +243,7 @@ function MessageInput({
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                null;
+                console.log("Enter");
               }
               if (content.length > 0) {
                 sendTypingIndicator({ directMessage });
