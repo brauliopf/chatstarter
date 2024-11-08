@@ -31,7 +31,7 @@ export default function MessagePage({
   params: Promise<{ id: Id<"directMessages"> }>;
 }) {
   const { id } = use(params);
-  const [showScrollButton, setShowScrollButton] = useState(false);
+  // const [showScrollButton, setShowScrollButton] = useState(false);
 
   const user = useQuery(api.functions.user.get);
   const directMessage = useQuery(api.functions.dms.get, { id });

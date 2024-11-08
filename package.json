@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "run-p dev:*",
     "dev:convex": "convex dev",
-    "dev:next": "next dev --turbopack",
+    "dev:next": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
