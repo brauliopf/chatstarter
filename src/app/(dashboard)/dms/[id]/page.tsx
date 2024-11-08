@@ -205,7 +205,7 @@ function MessageInput({
       setAttachment(undefined);
       setFile(undefined);
     } catch (error) {
-      toast.error("Failed to send message");
+      toast.error("Failed to send message", { description: error.message });
     }
   };
 
