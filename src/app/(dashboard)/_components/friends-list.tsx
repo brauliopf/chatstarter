@@ -135,9 +135,9 @@ export function AcceptedFriendsList() {
                 icon={<MessageCircleIcon />}
                 className="bg-blue-100"
                 title="Start DM"
-                onClick={() => {
-                  createDmRedirect({ username: friend.user.username });
-                }}
+                onClick={() =>
+                  createDmRedirect({ username: friend.user.username })
+                }
               />
             )}
             <IconButton
