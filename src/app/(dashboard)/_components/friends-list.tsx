@@ -123,6 +123,7 @@ export function AcceptedFriendsList() {
           >
             {friend.user._id ? (
               <Link href={`/dms/${dict[friend.user._id]}`}>
+                <span>{friend.user._id}</span>
                 <IconButton
                   icon={<MessageCircleIcon />}
                   className="bg-blue-100"
