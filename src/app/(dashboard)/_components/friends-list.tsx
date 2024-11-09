@@ -121,9 +121,8 @@ export function AcceptedFriendsList() {
             username={friend.user.username}
             image={friend.user.image}
           >
-            {friend.user._id ? (
+            {dict[friend.user._id] ? (
               <Link href={`/dms/${dict[friend.user._id]}`}>
-                <span>{friend.user._id}</span>
                 <IconButton
                   icon={<MessageCircleIcon />}
                   className="bg-blue-100"
