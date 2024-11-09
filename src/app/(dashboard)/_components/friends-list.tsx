@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { CheckIcon, MessageCircleIcon, XIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function PendingFriendsList() {
   const friends = useQuery(api.functions.friends.listPending);
@@ -86,6 +88,24 @@ export function AcceptedFriendsList() {
       dict[dm.user._id] = dm._id;
     });
   }
+  const createDirectMessage = useMutation(api.functions.dms.create);
+  const router = useRouter();
+  const createDmRedirect = async ({ username }: { username: string }) => {
+    try {
+      const id = await createDirectMessage({
+        username: username,
+      });
+      router.push(`/dms/${id}`);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("not found")) {
+        toast.error("User not found. Please check the username.");
+      } else {
+        toast.error("Failed to create DM", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col divide-y">
@@ -101,14 +121,25 @@ export function AcceptedFriendsList() {
             username={friend.user.username}
             image={friend.user.image}
           >
-            <Link href={`/dms/${dict[friend.user._id]}`}>
+            {friend.user._id ? (
+              <Link href={`/dms/${dict[friend.user._id]}`}>
+                <IconButton
+                  icon={<MessageCircleIcon />}
+                  className="bg-blue-100"
+                  title="Start DM"
+                  onClick={() => {}}
+                />
+              </Link>
+            ) : (
               <IconButton
                 icon={<MessageCircleIcon />}
                 className="bg-blue-100"
                 title="Start DM"
-                onClick={() => {}}
+                onClick={() => {
+                  createDmRedirect({ username: friend.user.username });
+                }}
               />
-            </Link>
+            )}
             <IconButton
               icon={<XIcon />}
               className="bg-red-100"
