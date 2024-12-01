@@ -2,9 +2,9 @@
 
 ## Overview
 
-This is a clone of Discord's 1:1 chat. Users can sign up with their email, Google, or Github account. Once signed in, they can chat with each other in real-time.
+This is a Next.js application that uses Clerk.js to power user management (authentication and athorization), and Convex.dev to enable application database with with support for automatic indexing and straightforward api to handle queries and data manipulation with real-time events.
 
-The frontend is build with Next.js, using Shadcn UI components. The backend is built with Convex, with support for automatic indexing and straightforward api to handle queries and data manipulation with real-time events. Also, we used ready-to-use UI components from Clerk to power user authentication.
+The frontend uses Shadcn UI components. Users can sign up with their email, Google, or Github account. Once signed in, they can chat with each other in real-time.
 
 ---
 
