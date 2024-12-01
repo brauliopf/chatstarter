@@ -1,7 +1,7 @@
 import { authenticatedMutation } from "./helpers";
 import { v } from "convex/values";
 
-// wrapper on toip of a mutation. it guarantees that there is a user signed in
+// wrapper on top of a mutation. it guarantees that there is a user signed in
 export const remove = authenticatedMutation({
   // the mutation takes an object with the parameters and a function as handler
   args: {
